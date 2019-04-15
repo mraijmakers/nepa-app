@@ -20,6 +20,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
 }
 
 dependencies {
@@ -34,4 +38,13 @@ dependencies {
     // Estimote Proximity SDK
     // https://github.com/Estimote/Android-Proximity-SDK
     implementation 'com.estimote:proximity-sdk:1.0.3'
+
+    // HTTP Client
+    implementation 'com.squareup.okhttp3:okhttp:3.14.1'
+
+    // Utility library for Kotlin on Android
+    implementation "org.jetbrains.anko:anko-commons:0.10.8"
+
+    // JSON serialization
+    implementation 'com.google.code.gson:gson:2.8.5'
 }

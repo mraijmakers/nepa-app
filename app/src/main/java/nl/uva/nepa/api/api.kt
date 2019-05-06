@@ -1,8 +1,7 @@
 package nl.uva.nepa.api
 
 import android.util.Log
-import com.estimote.internal_plugins_api.scanning.EstimoteTelemetryFull
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import okhttp3.*
 import java.io.IOException
 import java.util.logging.Logger
@@ -10,10 +9,20 @@ import java.util.logging.Logger
 private const val TAG = "api"
 private val logger: Logger = Logger.getLogger(TAG)
 
+data class EstimotePacket(
+    val identifier: String,
+    val channel: Int,
+    val measuredPower: Int,
+    val rssi: Int,
+    val macAddress: String,
+    val timestamp: Long
+)
+
 data class DataPoint(
     val deviceId: String,
     val deviceTimeStamp: Long,
-    val estimoteTelemetryPacket: EstimoteTelemetryFull
+    val section: String?,
+    val estimoteTelemetryPacket: EstimotePacket
 )
 
 data class ApiStatus(
@@ -25,6 +34,8 @@ class ApiClient(
     private val baseUrl: String,
     private val httpClient: OkHttpClient
 ) {
+
+    private val gson = GsonBuilder().serializeNulls().create()
 
     companion object {
 
@@ -70,7 +81,7 @@ class ApiClient(
     }
 
     private fun serializeToJson(dataPoint: DataPoint): String {
-        return Gson().toJson(dataPoint)
+        return gson.toJson(dataPoint)
     }
 
 }

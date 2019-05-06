@@ -30,5 +30,25 @@
             app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintVertical_bias="0.189"
             android:layout_marginEnd="8dp" app:layout_constraintEnd_toEndOf="parent" android:layout_marginStart="8dp"
             app:layout_constraintStart_toStartOf="parent" app:layout_constraintHorizontal_bias="0.48"/>
+    <Button
+            android:text="Start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/buttonStartStop" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
+            android:layout_marginBottom="32dp" app:layout_constraintBottom_toBottomOf="parent"
+            android:enabled="false"/>
+    <android.support.design.widget.TextInputLayout
+            android:layout_width="256dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
+            android:layout_marginBottom="32dp" app:layout_constraintBottom_toTopOf="@+id/buttonStartStop">
+
+        <android.support.design.widget.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Section" android:id="@+id/sectionEditText" android:maxLines="1" android:inputType="text"/>
+    </android.support.design.widget.TextInputLayout>
 
 </android.support.constraint.ConstraintLayout>

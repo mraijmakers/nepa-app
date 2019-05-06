@@ -8,13 +8,20 @@ import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
+import android.support.design.widget.TextInputEditText
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
+import android.widget.Button
 import android.widget.TextView
+import com.estimote.internal_plugins_api.scanning.EstimoteLocation
 import com.estimote.internal_plugins_api.scanning.EstimoteTelemetryFull
+import com.estimote.internal_plugins_api.scanning.Packet
 import com.estimote.internal_plugins_api.scanning.ScanHandler
 import com.estimote.scanning_plugin.api.EstimoteBluetoothScannerFactory
 import nl.uva.nepa.api.ApiClient
 import nl.uva.nepa.api.DataPoint
+import nl.uva.nepa.api.EstimotePacket
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.find
@@ -42,6 +49,12 @@ class MainActivity : AppCompatActivity(), AnkoLogger {
     private lateinit var statusText: TextView
     private var status = Status.REQUESTING_PERMISSIONS
 
+    private lateinit var startStopButton: Button
+    private var sendingEnabled = false
+
+    private lateinit var sectionEditText: TextInputEditText
+    private var section: String? = null
+
     private lateinit var packetsReceivedCounterText: TextView
     private var packetsReceived = 0
 
@@ -59,6 +72,27 @@ class MainActivity : AppCompatActivity(), AnkoLogger {
 
         statusText = find(R.id.status)
         packetsReceivedCounterText = find(R.id.packetsReceivedCounter)
+
+
+        startStopButton = find(R.id.buttonStartStop)
+        startStopButton.setOnClickListener {
+            sendingEnabled = !sendingEnabled
+            startStopButton.text = if (sendingEnabled) "Stop" else "Start"
+        }
+
+        sectionEditText = find(R.id.sectionEditText)
+        sectionEditText.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                section = s.toString()
+            }
+        })
+
 
         find<TextView>(R.id.deviceUuid).text = deviceUuid
 
@@ -155,24 +189,37 @@ class MainActivity : AppCompatActivity(), AnkoLogger {
         val bluetoothScanner = EstimoteBluetoothScannerFactory(applicationContext).getSimpleScanner()
 
         telemetryHandler = bluetoothScanner
-            .estimoteTelemetryFullScan()
+            .estimoteLocationScan()
             .withBalancedPowerMode()
-            .withOnPacketFoundAction { packet: EstimoteTelemetryFull ->
+            .withOnPacketFoundAction { packet: EstimoteLocation ->
                 incrementPacketsReceived()
-                postPacketToServer(packet)
+
+                if (sendingEnabled) {
+                    postPacketToServer(packet)
+                }
             }
             .withOnScanErrorAction {e: Throwable ->
                 Log.e(TAG, "Scan error: $e")
             }
             .start()
+
+        runOnUiThread { startStopButton.isEnabled = true }
     }
 
-    private fun postPacketToServer(packet: EstimoteTelemetryFull)
+    private fun postPacketToServer(packet: EstimoteLocation)
     {
         val dataPoint = DataPoint(
             deviceId = deviceUuid,
             deviceTimeStamp = System.currentTimeMillis(),
-            estimoteTelemetryPacket = packet
+            section = section,
+            estimoteTelemetryPacket = EstimotePacket(
+                identifier = packet.deviceId,
+                rssi = packet.rssi,
+                channel = packet.channel,
+                measuredPower =  packet.measuredPower,
+                macAddress =  packet.macAddress.address,
+                timestamp =  packet.timestamp
+            )
         )
 
         doAsync {

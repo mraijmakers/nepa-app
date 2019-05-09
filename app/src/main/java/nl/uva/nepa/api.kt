@@ -18,16 +18,21 @@ data class EstimotePacket(
     val timestamp: Long
 )
 
-data class DataPoint(
+data class Packet(
     val deviceId: String,
     val deviceTimeStamp: Long,
-    val section: String?,
     val estimoteTelemetryPacket: EstimotePacket
 )
 
 data class ApiStatus(
     val available: Boolean,
     val exception: IOException? = null
+)
+
+data class Fingerprint(
+    val location: String,
+    val section: String,
+    val signals: Map<String, Int>
 )
 
 class ApiClient(
@@ -38,9 +43,7 @@ class ApiClient(
     private val gson = GsonBuilder().serializeNulls().create()
 
     companion object {
-
-        fun createProductionClient() = ApiClient("http://nepa.1dev.nl/api", OkHttpClient())
-
+        fun create() = ApiClient("http://nepa.1dev.nl/api", OkHttpClient())
         fun create(baseUrl: String) = ApiClient(baseUrl, OkHttpClient())
     }
 
@@ -63,25 +66,36 @@ class ApiClient(
         }
     }
 
-    fun createDataPoint(dataPoint: DataPoint): Boolean {
-        val jsonDataPoint = serializeToJson(dataPoint)
+    fun savePacket(packet: Packet): Boolean {
+        val jsonPacket = packet.serializeToJson()
+        val uri = "$baseUrl/packet"
 
+        return post(uri, jsonPacket)
+    }
+
+    fun saveFingerprint(fingerprint: Fingerprint): Boolean {
+        val jsonFingerprint = fingerprint.serializeToJson()
+        val uri = "$baseUrl/fingerprint"
+
+        return post(uri, jsonFingerprint)
+    }
+
+    private fun Any.serializeToJson(): String {
+        return gson.toJson(this)
+    }
+
+    private fun post(uri: String, json: String): Boolean {
         val request = Request.Builder()
-            .url("$baseUrl/datapoint")
-            .post(RequestBody.create(jsonType, jsonDataPoint))
+            .url(uri)
+            .post(RequestBody.create(jsonType, json))
             .build()
 
-        logger.info("Sending datapoint to server: $jsonDataPoint")
+        logger.info("POST $uri: $json")
 
         httpClient.newCall(request).execute().use { response ->
-            logger.info("Server returned ${response.code()} ${response.message()}")
+            logger.info("POST: $uri HTTP ${response.code()} ${response.message()}")
 
             return response.isSuccessful
         }
     }
-
-    private fun serializeToJson(dataPoint: DataPoint): String {
-        return gson.toJson(dataPoint)
-    }
-
 }

@@ -1,4 +1,4 @@
-package nl.uva.nepa.api
+package nl.uva.nepa
 
 import android.util.Log
 import com.google.gson.GsonBuilder

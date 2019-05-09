@@ -7,7 +7,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.provider.Settings
 import android.support.design.widget.TextInputEditText
 import android.text.Editable
 import android.text.TextWatcher
@@ -15,25 +14,20 @@ import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import com.estimote.internal_plugins_api.scanning.EstimoteLocation
-import com.estimote.internal_plugins_api.scanning.EstimoteTelemetryFull
-import com.estimote.internal_plugins_api.scanning.Packet
 import com.estimote.internal_plugins_api.scanning.ScanHandler
 import com.estimote.scanning_plugin.api.EstimoteBluetoothScannerFactory
-import nl.uva.nepa.api.ApiClient
-import nl.uva.nepa.api.DataPoint
-import nl.uva.nepa.api.EstimotePacket
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.find
 import org.jetbrains.anko.info
 import java.util.*
 
-const val TAG = "MainActivity"
+private const val TAG = "MainActivity"
 
-val NEEDED_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
-const val REQUEST_FINE_LOCATION_CODE = 200
+private val NEEDED_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+private const val REQUEST_FINE_LOCATION_CODE = 200
 
-const val PREFERENCE_DEVICE_UUID = "nl.uva.nepa.DEVICE_UUID"
+private const val PREFERENCE_DEVICE_UUID = "nl.uva.nepa.DEVICE_UUID"
 
 enum class Status(val textRepresentation: String) {
     INITIALIZING("Initializing"),
@@ -45,6 +39,8 @@ enum class Status(val textRepresentation: String) {
 }
 
 class MainActivity : AppCompatActivity(), AnkoLogger {
+
+
 
     private lateinit var statusText: TextView
     private var status = Status.REQUESTING_PERMISSIONS
@@ -72,7 +68,6 @@ class MainActivity : AppCompatActivity(), AnkoLogger {
 
         statusText = find(R.id.status)
         packetsReceivedCounterText = find(R.id.packetsReceivedCounter)
-
 
         startStopButton = find(R.id.buttonStartStop)
         startStopButton.setOnClickListener {
@@ -216,9 +211,9 @@ class MainActivity : AppCompatActivity(), AnkoLogger {
                 identifier = packet.deviceId,
                 rssi = packet.rssi,
                 channel = packet.channel,
-                measuredPower =  packet.measuredPower,
-                macAddress =  packet.macAddress.address,
-                timestamp =  packet.timestamp
+                measuredPower = packet.measuredPower,
+                macAddress = packet.macAddress.address,
+                timestamp = packet.timestamp
             )
         )
 

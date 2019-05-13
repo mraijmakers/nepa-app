@@ -1,8 +1,8 @@
 package nl.uva.nepa
 
 import android.content.Context
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -12,9 +12,14 @@ import com.estimote.scanning_plugin.api.EstimoteBluetoothScannerFactory
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.find
 import java.util.*
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 
 private const val TAG = "ScanActivity"
 private const val PREFERENCE_DEVICE_UUID = "nl.uva.nepa.DEVICE_UUID"
+
+private const val SEND_PACKETS_INTERVAL = 3L // seconds
 
 class ScanActivity : AppCompatActivity() {
     private lateinit var deviceUuidTextView: TextView
@@ -29,6 +34,8 @@ class ScanActivity : AppCompatActivity() {
 
     private var telemetryHandler: ScanHandler? = null
     private val packets = mutableListOf<EstimoteLocation>()
+
+    private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +60,13 @@ class ScanActivity : AppCompatActivity() {
                 Log.e(TAG, "Scan error: $e")
             }
             .start()
+
+        scheduler.scheduleAtFixedRate({
+            Log.i(TAG, "Scheduled flush")
+            runOnUiThread {
+                postPacketsToServer()
+            }
+        }, SEND_PACKETS_INTERVAL, SEND_PACKETS_INTERVAL, TimeUnit.SECONDS)
     }
 
     private fun incrementPacketCounter() {
@@ -60,24 +74,34 @@ class ScanActivity : AppCompatActivity() {
         packetCounter.text = receivedPackets.toString()
     }
 
-    private fun postPacketToServer(packet: EstimoteLocation)
+    private fun postPacketsToServer()
     {
-        val apiPacket = Packet(
-            deviceId = deviceUuid,
-            deviceTimeStamp = System.currentTimeMillis(),
-            estimoteTelemetryPacket = EstimotePacket(
-                identifier = packet.deviceId,
-                rssi = packet.rssi,
-                channel = packet.channel,
-                measuredPower = packet.measuredPower,
-                macAddress = packet.macAddress.address,
-                timestamp = packet.timestamp
+        val apiPackets = this.packets.map { estimotePacket ->
+            Packet(
+                deviceUuid,
+                System.currentTimeMillis(),
+                EstimotePacket(
+                    estimotePacket.deviceId,
+                    estimotePacket.channel,
+                    estimotePacket.measuredPower,
+                    estimotePacket.rssi,
+                    estimotePacket.macAddress.address,
+                    estimotePacket.timestamp
+                )
             )
-        )
-
-        doAsync {
-            apiClient.savePacket(apiPacket)
         }
+
+        this.packets.clear()
+        Log.i(TAG, "Sending ${apiPackets.size} packets to server")
+        doAsync {
+            apiClient.savePackets(apiPackets)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        scheduler.shutdown()
     }
 
     private fun getDeviceUniqueId(): String {

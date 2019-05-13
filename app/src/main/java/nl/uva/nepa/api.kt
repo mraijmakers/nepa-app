@@ -2,7 +2,10 @@ package nl.uva.nepa
 
 import android.util.Log
 import com.google.gson.GsonBuilder
-import okhttp3.*
+import okhttp3.MediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import java.io.IOException
 import java.util.logging.Logger
 
@@ -66,11 +69,11 @@ class ApiClient(
         }
     }
 
-    fun savePacket(packet: Packet): Boolean {
-        val jsonPacket = packet.serializeToJson()
-        val uri = "$baseUrl/packet"
+    fun savePackets(packets: List<Packet>): Boolean {
+        val json = mapOf("packets" to packets).serializeToJson()
+        val uri = "$baseUrl/packets"
 
-        return post(uri, jsonPacket)
+        return post(uri, json)
     }
 
     fun saveFingerprint(fingerprint: Fingerprint): Boolean {

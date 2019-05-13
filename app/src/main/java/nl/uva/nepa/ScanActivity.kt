@@ -102,6 +102,7 @@ class ScanActivity : AppCompatActivity() {
         super.onDestroy()
 
         scheduler.shutdown()
+        telemetryHandler?.stop()
     }
 
     private fun getDeviceUniqueId(): String {

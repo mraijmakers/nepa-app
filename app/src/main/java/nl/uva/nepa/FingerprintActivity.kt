@@ -1,8 +1,8 @@
 package nl.uva.nepa
 
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.TextInputEditText
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
@@ -12,7 +12,10 @@ import com.estimote.internal_plugins_api.scanning.ScanHandler
 import com.estimote.scanning_plugin.api.EstimoteBluetoothScannerFactory
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.find
-import java.util.concurrent.*
+import java.io.IOException
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
 private const val TAG = "FingerprintActivity"
@@ -93,7 +96,11 @@ class FingerprintActivity : AppCompatActivity() {
 
             doAsync {
                 if (fingerprint.signals.isNotEmpty()) {
-                    uploadFingerprint(fingerprint)
+                    try {
+                        uploadFingerprint(fingerprint)
+                    } catch (e: IOException) {
+                        Log.e(TAG, "Upload failed", e)
+                    }
                 }
 
                 runOnUiThread {

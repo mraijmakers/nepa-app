@@ -16,12 +16,12 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
-private const val TAG = "ScanActivity"
+private const val TAG = "LiveActivity"
 private const val PREFERENCE_DEVICE_UUID = "nl.uva.nepa.DEVICE_UUID"
 
 private const val SEND_PACKETS_INTERVAL = 3L // seconds
 
-class ScanActivity : AppCompatActivity() {
+class LiveActivity : AppCompatActivity() {
     private lateinit var deviceUuidTextView: TextView
     private lateinit var deviceUuid: String
 
@@ -33,7 +33,7 @@ class ScanActivity : AppCompatActivity() {
     private val apiClient = ApiClient.create()
 
     private var telemetryHandler: ScanHandler? = null
-    private val packets = mutableListOf<EstimoteLocation>()
+    private val packets = mutableListOf<Packet>()
 
     private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
@@ -54,7 +54,18 @@ class ScanActivity : AppCompatActivity() {
             .withBalancedPowerMode()
             .withOnPacketFoundAction { packet: EstimoteLocation ->
                 incrementPacketCounter()
-                packets.add(packet)
+                packets.add(Packet(
+                    deviceUuid,
+                    System.currentTimeMillis(),
+                    EstimotePacket(
+                        packet.deviceId,
+                        packet.channel,
+                        packet.measuredPower,
+                        packet.rssi,
+                        packet.macAddress.address,
+                        packet.timestamp
+                    )
+                ))
             }
             .withOnScanErrorAction { e: Throwable ->
                 Log.e(TAG, "Scan error: $e")
@@ -76,22 +87,10 @@ class ScanActivity : AppCompatActivity() {
 
     private fun postPacketsToServer()
     {
-        val apiPackets = this.packets.map { estimotePacket ->
-            Packet(
-                deviceUuid,
-                System.currentTimeMillis(),
-                EstimotePacket(
-                    estimotePacket.deviceId,
-                    estimotePacket.channel,
-                    estimotePacket.measuredPower,
-                    estimotePacket.rssi,
-                    estimotePacket.macAddress.address,
-                    estimotePacket.timestamp
-                )
-            )
-        }
-
+        // shallow copy
+        val apiPackets = this.packets.map { it}
         this.packets.clear()
+
         Log.i(TAG, "Sending ${apiPackets.size} packets to server")
         doAsync {
             apiClient.savePackets(apiPackets)

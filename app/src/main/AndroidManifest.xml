@@ -14,10 +14,10 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
-        <activity android:name=".ScanActivity">
+        <activity android:name=".LiveActivity">
         </activity>
         <activity
-                android:name=".FingerprintActivity"
+                android:name=".TrainActivity"
                 android:label="@string/title_activity_fingerprint"
                 android:theme="@style/AppTheme.NoActionBar">
         </activity>

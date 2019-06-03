@@ -35,7 +35,9 @@ data class ApiStatus(
 data class Fingerprint(
     val location: String,
     val section: String,
-    val signals: Map<String, Int>
+    val recordStartTime: Long,
+    val recordEndTime: Long,
+    val packets: List<EstimotePacket>
 )
 
 class ApiClient(
@@ -76,11 +78,11 @@ class ApiClient(
         return post(uri, json)
     }
 
-    fun saveFingerprint(fingerprint: Fingerprint): Boolean {
-        val jsonFingerprint = fingerprint.serializeToJson()
-        val uri = "$baseUrl/fingerprint"
+    fun saveFingerprints(fingerprints: List<Fingerprint>): Boolean {
+        val json = mapOf("fingerprints" to fingerprints).serializeToJson()
+        val uri = "$baseUrl/fingerprints"
 
-        return post(uri, jsonFingerprint)
+        return post(uri, json)
     }
 
     private fun Any.serializeToJson(): String {

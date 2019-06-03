@@ -5,8 +5,8 @@ import android.annotation.TargetApi
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.Button
 import org.jetbrains.anko.AnkoLogger
@@ -18,8 +18,8 @@ private const val REQUEST_FINE_LOCATION_CODE = 200
 class MainActivity : AppCompatActivity(), AnkoLogger {
 
     private lateinit var bluetoothPermissionsButton: Button
-    private lateinit var fingerprintButton: Button
-    private lateinit var scanButton: Button
+    private lateinit var trainButton: Button
+    private lateinit var liveButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,17 +31,17 @@ class MainActivity : AppCompatActivity(), AnkoLogger {
             }
         }
 
-        fingerprintButton = find<Button>(R.id.fingerprintButton).apply {
+        trainButton = find<Button>(R.id.trainButton).apply {
             isEnabled = false
             setOnClickListener {
-                startActivity(Intent(applicationContext, FingerprintActivity::class.java))
+                startActivity(Intent(applicationContext, TrainActivity::class.java))
             }
         }
 
-        scanButton = find<Button>(R.id.scanButton).apply {
+        liveButton = find<Button>(R.id.liveButton).apply {
             isEnabled = false
             setOnClickListener {
-                startActivity(Intent(applicationContext, ScanActivity::class.java))
+                startActivity(Intent(applicationContext, LiveActivity::class.java))
             }
         }
 
@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity(), AnkoLogger {
 
     private fun enableButtonsAndRemovePermissionButton() {
         bluetoothPermissionsButton.visibility = View.GONE
-        scanButton.isEnabled = true
-        fingerprintButton.isEnabled = true
+        liveButton.isEnabled = true
+        trainButton.isEnabled = true
     }
 }

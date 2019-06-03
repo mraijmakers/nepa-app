@@ -1,7 +1,7 @@
 package nl.uva.nepa
 
-import android.os.Bundle
-import android.os.Handler
+import android.content.Context
+import android.os.*
 import android.support.design.widget.TextInputEditText
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -17,7 +17,7 @@ import kotlin.math.min
 private const val TAG = "TrainActivity"
 
 private const val TIME_WINDOW = 1000L // 1 second time windows
-private const val NUM_FINGERPRINTS_PER_SECTION = 120
+private const val NUM_FINGERPRINTS_PER_SECTION = 180
 
 class TrainActivity : AppCompatActivity() {
     private var isFingerprinting = false
@@ -88,6 +88,8 @@ class TrainActivity : AppCompatActivity() {
         val scanDurationMs = timeWindowMs * numSamples
 
         scanTask = collectPackets(scanDurationMs) { recordStartTime, recordEndTime, packets ->
+            vibrate()
+
             val fingerprints = splitIntoFingerprintsByTimeWindow(
                 location, section, timeWindowMs, numSamples, recordStartTime, recordEndTime, packets
             )
@@ -114,7 +116,10 @@ class TrainActivity : AppCompatActivity() {
         }
     }
 
-    private fun collectPackets(durationMs: Long, resultCallback: (recordStartTimeMs: Long, recordEndTimeMs: Long, List<Packet>) -> Unit): Cancellable {
+    private fun collectPackets(
+        durationMs: Long,
+        resultCallback: (recordStartTimeMs: Long, recordEndTimeMs: Long, List<Packet>) -> Unit
+    ): Cancellable {
         val receivedPackets = mutableListOf<Packet>()
         val recordStartTime: Long = System.currentTimeMillis()
 
@@ -122,10 +127,12 @@ class TrainActivity : AppCompatActivity() {
             .estimoteLocationScan()
             .withBalancedPowerMode()
             .withOnPacketFoundAction { packet: EstimoteLocation ->
-                receivedPackets.add(Packet(
-                    System.currentTimeMillis(),
-                    packet
-                ))
+                receivedPackets.add(
+                    Packet(
+                        System.currentTimeMillis(),
+                        packet
+                    )
+                )
             }
             .withOnScanErrorAction { e: Throwable ->
                 Log.e(TAG, "Scan error: $e")
@@ -173,14 +180,16 @@ class TrainActivity : AppCompatActivity() {
                 section,
                 currentWindowStart,
                 currentWindowEnd,
-                packetsInWindow.map { p -> EstimotePacket(
-                    p.estimoteLocation.deviceId,
-                    p.estimoteLocation.channel,
-                    p.estimoteLocation.measuredPower,
-                    p.estimoteLocation.rssi,
-                    p.estimoteLocation.macAddress.address,
-                    p.estimoteLocation.timestamp
-                ) }
+                packetsInWindow.map { p ->
+                    EstimotePacket(
+                        p.estimoteLocation.deviceId,
+                        p.estimoteLocation.channel,
+                        p.estimoteLocation.measuredPower,
+                        p.estimoteLocation.rssi,
+                        p.estimoteLocation.macAddress.address,
+                        p.estimoteLocation.timestamp
+                    )
+                }
             ))
 
             // move window
@@ -189,5 +198,17 @@ class TrainActivity : AppCompatActivity() {
         }
 
         return fingerprints
+    }
+
+    private fun vibrate(durationMs: Long = 1000) {
+        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(
+                durationMs, VibrationEffect.DEFAULT_AMPLITUDE
+            ))
+        } else {
+            vibrator.vibrate(durationMs)
+        }
     }
 }

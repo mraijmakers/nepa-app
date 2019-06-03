@@ -100,6 +100,7 @@ class TrainActivity : AppCompatActivity() {
 
             statusText.text = "Collected ${fingerprints.size} fingerprints"
             startInterruptButton.text = "Start"
+            isFingerprinting = false
         }
 
         isFingerprinting = true

@@ -51,7 +51,7 @@ class LiveActivity : AppCompatActivity() {
 
         telemetryHandler = EstimoteBluetoothScannerFactory(applicationContext).getSimpleScanner()
             .estimoteLocationScan()
-            .withBalancedPowerMode()
+            .withLowLatencyPowerMode()
             .withOnPacketFoundAction { packet: EstimoteLocation ->
                 incrementPacketCounter()
                 packets.add(Packet(
